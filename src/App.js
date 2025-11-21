@@ -1,8 +1,23 @@
 import React, { useState } from 'react';
-import { ShoppingCart, Plus, Minus, Trash2, Search, Package } from 'lucide-react';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { ShoppingCart, Plus, Minus, Trash2, Search, Package, User } from 'lucide-react';
 import './App.css';
+import UserProfile from './UserProfile';
+import Login from './Login';
+import Signup from './Signup';
 
 const ProvisionStore = () => {
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+
+  // Check if user is logged in on component mount
+  React.useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
   const initialProducts = [
     { id: 1, name: 'Rice (1kg)', price: 60, category: 'Grains', image: '🌾', stock: 50 },
     { id: 2, name: 'Wheat Flour (1kg)', price: 45, category: 'Grains', image: '🌾', stock: 40 },
@@ -82,21 +97,110 @@ const ProvisionStore = () => {
             <Package size={32} />
             <h1>R.R. Provision Store</h1>
           </div>
-          <button onClick={() => setShowCart(!showCart)} className="cart-button">
-            <ShoppingCart size={20} />
-            <span>Cart</span>
-            {totalItems > 0 && <span className="cart-badge">{totalItems}</span>}
-          </button>
+          <div className="header-buttons">
+            {user ? (
+              <button onClick={() => navigate('/profile')} className="profile-button">
+                <User size={20} />
+                <span>{user.name}</span>
+              </button>
+            ) : (
+              <button onClick={() => navigate('/login')} className="login-button">
+                Login
+              </button>
+            )}
+            <button onClick={() => setShowCart(!showCart)} className="cart-button">
+              <ShoppingCart size={20} />
+              <span>Cart</span>
+              {totalItems > 0 && <span className="cart-badge">{totalItems}</span>}
+            </button>
+          </div>
         </div>
       </header>
 
+      {/* Hero Section */}
+      <div className="hero-section">
+        <div className="hero-content">
+          <div className="hero-text">
+            <span className="hero-badge">🎉 Fresh Arrivals Daily</span>
+            <h1 className="hero-title">
+              Your Trusted
+              <span className="gradient-text"> Neighborhood Store</span>
+            </h1>
+            <p className="hero-description">
+              Quality groceries and essentials delivered fresh to your doorstep.
+              Experience the convenience of shopping from home with the best prices in town.
+            </p>
+            <div className="hero-buttons">
+              <button className="hero-btn primary" onClick={() => document.getElementById('products').scrollIntoView({ behavior: 'smooth' })}>
+                Shop Now
+                <span className="btn-arrow">→</span>
+              </button>
+              <button className="hero-btn secondary" onClick={() => navigate('/signup')}>
+                Join Now
+              </button>
+            </div>
+          </div>
+          <div className="hero-visual">
+            <div className="floating-card card-1">
+              <div className="card-icon">🌾</div>
+              <div className="card-info">
+                <h4>Fresh Grains</h4>
+                <p>Premium Quality</p>
+              </div>
+            </div>
+            <div className="floating-card card-2">
+              <div className="card-icon">☕</div>
+              <div className="card-info">
+                <h4>Beverages</h4>
+                <p>Best Selection</p>
+              </div>
+            </div>
+            <div className="floating-card card-3">
+              <div className="card-icon">🌶️</div>
+              <div className="card-info">
+                <h4>Spices</h4>
+                <p>Authentic Taste</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Section */}
+      <div className="stats-section">
+        <div className="stat-item">
+          <div className="stat-number">500+</div>
+          <div className="stat-label">Products</div>
+        </div>
+        <div className="stat-divider"></div>
+        <div className="stat-item">
+          <div className="stat-number">10K+</div>
+          <div className="stat-label">Happy Customers</div>
+        </div>
+        <div className="stat-divider"></div>
+        <div className="stat-item">
+          <div className="stat-number">24/7</div>
+          <div className="stat-label">Support</div>
+        </div>
+        <div className="stat-divider"></div>
+        <div className="stat-item">
+          <div className="stat-number">Fast</div>
+          <div className="stat-label">Delivery</div>
+        </div>
+      </div>
+
       <div className="container">
-        <div className="search-section">
+        {/* Search and Filter Section */}
+        <div className="search-section" id="products">
+          <div className="section-header-main">
+            <h2>Browse Our Products</h2>
+            <p>Find everything you need for your daily essentials</p>
+          </div>
           <div className="search-box">
             <Search className="search-icon" size={20} />
             <input
               type="text"
-              placeholder="Search products..."
+              placeholder="Search for products..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -158,50 +262,87 @@ const ProvisionStore = () => {
           <div className="cart-section" onClick={(e) => e.stopPropagation()}>
             <div className="cart-card">
               <div className="cart-header">
-                <h2>Shopping Cart</h2>
+                <div className="cart-header-content">
+                  <ShoppingCart size={24} />
+                  <h2>Shopping Cart</h2>
+                  {totalItems > 0 && <span className="cart-count-badge">{totalItems}</span>}
+                </div>
                 <button onClick={() => setShowCart(false)} className="close-cart">
                   ✕
                 </button>
               </div>
-              
+
               {cart.length === 0 ? (
-                <p className="empty-cart">Your cart is empty</p>
+                <div className="empty-cart-container">
+                  <div className="empty-cart-icon">🛒</div>
+                  <h3>Your cart is empty</h3>
+                  <p>Add some products to get started!</p>
+                  <button className="continue-shopping-btn" onClick={() => setShowCart(false)}>
+                    Continue Shopping
+                  </button>
+                </div>
               ) : (
                 <>
                   <div className="cart-items">
                     {cart.map(item => (
                       <div key={item.id} className="cart-item">
-                        <div className="cart-item-header">
-                          <div>
-                            <h4>{item.name}</h4>
-                            <p className="item-price">₹{item.price}</p>
-                          </div>
-                          <button onClick={() => removeFromCart(item.id)} className="remove-btn">
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                        <div className="cart-item-footer">
-                          <div className="quantity-controls">
-                            <button onClick={() => updateQuantity(item.id, -1)}>
-                              <Minus size={16} />
-                            </button>
-                            <span>{item.quantity}</span>
-                            <button onClick={() => updateQuantity(item.id, 1)}>
-                              <Plus size={16} />
+                        <div className="cart-item-image">{item.image}</div>
+                        <div className="cart-item-details">
+                          <div className="cart-item-header">
+                            <div>
+                              <h4>{item.name}</h4>
+                              <p className="item-category">{item.category}</p>
+                            </div>
+                            <button onClick={() => removeFromCart(item.id)} className="remove-btn" title="Remove item">
+                              <Trash2 size={18} />
                             </button>
                           </div>
-                          <span className="item-total">₹{item.price * item.quantity}</span>
+                          <div className="cart-item-footer">
+                            <div className="quantity-controls">
+                              <button onClick={() => updateQuantity(item.id, -1)} title="Decrease quantity">
+                                <Minus size={16} />
+                              </button>
+                              <span>{item.quantity}</span>
+                              <button onClick={() => updateQuantity(item.id, 1)} title="Increase quantity">
+                                <Plus size={16} />
+                              </button>
+                            </div>
+                            <div className="item-pricing">
+                              <span className="item-price">₹{item.price} each</span>
+                              <span className="item-total">₹{item.price * item.quantity}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ))}
                   </div>
-                  
-                  <div className="cart-footer">
-                    <div className="cart-total">
-                      <span>Total:</span>
+
+                  <div className="cart-summary">
+                    <div className="summary-row">
+                      <span>Subtotal ({totalItems} items)</span>
+                      <span>₹{totalAmount}</span>
+                    </div>
+                    <div className="summary-row">
+                      <span>Delivery Fee</span>
+                      <span className="free-badge">FREE</span>
+                    </div>
+                    <div className="summary-divider"></div>
+                    <div className="summary-row total-row">
+                      <span>Total</span>
                       <span className="total-amount">₹{totalAmount}</span>
                     </div>
-                    <button className="checkout-btn">Checkout</button>
+                    {totalAmount >= 500 && (
+                      <div className="savings-badge">
+                        🎉 You're saving on delivery!
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="cart-footer">
+                    <button className="checkout-btn">
+                      <span>Proceed to Checkout</span>
+                      <span className="btn-arrow">→</span>
+                    </button>
                     <button onClick={() => setCart([])} className="clear-btn">
                       Clear Cart
                     </button>
@@ -228,5 +369,20 @@ const ProvisionStore = () => {
     </div>
   );
 };
-// Export the component
-export default ProvisionStore;
+
+// Main App component with routing
+const App = () => {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<ProvisionStore />} />
+        <Route path="/profile" element={<UserProfile />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+      </Routes>
+    </Router>
+  );
+};
+
+// Export the App component
+export default App;
