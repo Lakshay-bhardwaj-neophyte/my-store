@@ -21,6 +21,32 @@ mongoose.connect(MONGODB_URI, {
     .then(() => console.log('✅ Connected to MongoDB'))
     .catch((err) => console.error('❌ MongoDB connection error:', err));
 
+// Order Item Schema
+const orderItemSchema = new mongoose.Schema({
+    productId: Number,
+    name: String,
+    quantity: Number,
+    price: Number,
+    image: String
+}, { _id: false });
+
+// Order Schema
+const orderSchema = new mongoose.Schema({
+    orderId: String,
+    date: { type: Date, default: Date.now },
+    items: [orderItemSchema],
+    total: Number,
+    status: { type: String, default: 'Processing' },
+    shippingAddress: {
+        street: String,
+        city: String,
+        state: String,
+        zip: String,
+        phone: String
+    },
+    paymentMethod: String
+}, { _id: false });
+
 // User Schema
 const userSchema = new mongoose.Schema({
     name: {
@@ -52,13 +78,7 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
-    orders: [{
-        orderId: String,
-        date: Date,
-        items: Number,
-        total: Number,
-        status: String,
-    }],
+    orders: [orderSchema],
     favorites: [{
         productId: Number,
         name: String,
@@ -326,7 +346,7 @@ app.delete('/api/user/favorites/:productId', authenticateToken, async (req, res)
 // Create order (protected route)
 app.post('/api/orders', authenticateToken, async (req, res) => {
     try {
-        const { items, total } = req.body;
+        const { items, total, shippingAddress, paymentMethod } = req.body;
 
         const user = await User.findById(req.user.userId);
         if (!user) {
@@ -339,6 +359,8 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
             items: items,
             total,
             status: 'Processing',
+            shippingAddress,
+            paymentMethod
         };
 
         user.orders.push(order);
@@ -354,9 +376,7 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
     }
 });
 
-// Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
-    console.log(`📊 MongoDB URI: ${MONGODB_URI}`);
 });
