@@ -7,6 +7,7 @@ const UserProfile = () => {
     const navigate = useNavigate();
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [selectedOrder, setSelectedOrder] = useState(null);
     const [userInfo, setUserInfo] = useState({
         name: '',
         email: '',
@@ -184,6 +185,48 @@ const UserProfile = () => {
                 <LogOut size={20} />
                 Logout
             </button>
+
+            {/* Order Details Modal */}
+            {selectedOrder && (
+                <div className="modal-overlay" onClick={() => setSelectedOrder(null)}>
+                    <div className="modal-content" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>Order Details</h3>
+                            <button className="close-modal" onClick={() => setSelectedOrder(null)}>
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <div className="modal-body">
+                            <div className="order-info-summary">
+                                <p><strong>Order ID:</strong> {selectedOrder.orderId}</p>
+                                <p><strong>Date:</strong> {new Date(selectedOrder.date).toLocaleDateString()}</p>
+                                <p><strong>Status:</strong> <span className={`status-badge ${selectedOrder.status.toLowerCase()}`}>{selectedOrder.status}</span></p>
+                            </div>
+                            <div className="order-items-list">
+                                {Array.isArray(selectedOrder.items) ? (
+                                    selectedOrder.items.map((item, idx) => (
+                                        <div key={idx} className="order-detail-item">
+                                            <div className="item-image">{item.image}</div>
+                                            <div className="item-info">
+                                                <h4>{item.name}</h4>
+                                                <p>Qty: {item.quantity}</p>
+                                            </div>
+                                            <div className="item-price">₹{item.price * item.quantity}</div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p>Order details not available for this legacy order.</p>
+                                )}
+                            </div>
+                            <div className="order-total-section">
+                                <span>Total Amount</span>
+                                <span>₹{selectedOrder.total}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="profile-container">
                 {/* Profile Header Card */}
                 <div className="profile-header-card">
@@ -334,7 +377,12 @@ const UserProfile = () => {
                         <div className="orders-list">
                             {orderHistory.length > 0 ? (
                                 orderHistory.map((order, index) => (
-                                    <div key={index} className="order-item">
+                                    <div
+                                        key={index}
+                                        className="order-item clickable"
+                                        onClick={() => setSelectedOrder(order)}
+                                        style={{ cursor: 'pointer' }}
+                                    >
                                         <div className="order-header">
                                             <span className="order-id">{order.orderId}</span>
                                             <span className={`order-status ${order.status.toLowerCase()}`}>
@@ -348,7 +396,7 @@ const UserProfile = () => {
                                             </div>
                                             <div className="order-detail">
                                                 <ShoppingBag size={14} />
-                                                <span>{order.items} items</span>
+                                                <span>{Array.isArray(order.items) ? order.items.length : order.items} items</span>
                                             </div>
                                             <div className="order-total">₹{order.total}</div>
                                         </div>

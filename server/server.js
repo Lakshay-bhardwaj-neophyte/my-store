@@ -322,6 +322,7 @@ app.delete('/api/user/favorites/:productId', authenticateToken, async (req, res)
     }
 });
 
+
 // Create order (protected route)
 app.post('/api/orders', authenticateToken, async (req, res) => {
     try {
@@ -335,7 +336,7 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
         const order = {
             orderId: `ORD-${Date.now()}`,
             date: new Date(),
-            items: items.length,
+            items: items,
             total,
             status: 'Processing',
         };

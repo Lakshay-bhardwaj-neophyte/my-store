@@ -1,17 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Plus, Minus, Trash2, Search, Package, User } from 'lucide-react';
 import './App.css';
 import UserProfile from './UserProfile';
 import Login from './Login';
 import Signup from './Signup';
+import Checkout from './Checkout';
 
 const ProvisionStore = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
 
   // Check if user is logged in on component mount
-  React.useEffect(() => {
+  useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
@@ -39,6 +40,28 @@ const ProvisionStore = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [showCart, setShowCart] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', product: null });
+
+  // Load cart from localStorage on mount
+  useEffect(() => {
+    const savedCart = localStorage.getItem('cart_items');
+    if (savedCart) {
+      setCart(JSON.parse(savedCart));
+    }
+
+    // Listen for cart updates from other components (like Checkout)
+    const handleCartUpdate = () => {
+      setCart([]);
+      localStorage.removeItem('cart_items');
+    };
+
+    window.addEventListener('cartUpdated', handleCartUpdate);
+    return () => window.removeEventListener('cartUpdated', handleCartUpdate);
+  }, []);
+
+  // Save cart to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('cart_items', JSON.stringify(cart));
+  }, [cart]);
 
   const categories = ['All', ...new Set(products.map(p => p.category))];
 
@@ -79,6 +102,15 @@ const ProvisionStore = () => {
 
   const removeFromCart = (id) => {
     setCart(cart.filter(item => item.id !== id));
+  };
+
+  const handleCheckout = () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    setShowCart(false);
+    navigate('/checkout');
   };
 
   const filteredProducts = products.filter(p =>
@@ -339,7 +371,7 @@ const ProvisionStore = () => {
                   </div>
 
                   <div className="cart-footer">
-                    <button className="checkout-btn">
+                    <button className="checkout-btn" onClick={handleCheckout}>
                       <span>Proceed to Checkout</span>
                       <span className="btn-arrow">→</span>
                     </button>
@@ -379,6 +411,7 @@ const App = () => {
         <Route path="/profile" element={<UserProfile />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/checkout" element={<Checkout />} />
       </Routes>
     </Router>
   );
